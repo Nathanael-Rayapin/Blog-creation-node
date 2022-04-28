@@ -1,17 +1,30 @@
 var createError = require('http-errors');
 var express = require('express');
+var session = require('express-session');
+const flash = require('connect-flash');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const Article = require('./models/article.model');
-const Category = require('./models/category.model');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+const req = require('express/lib/request');
 
 var app = express();
+// Prise en charge du JSON
+app.use(bodyParser.json());
+// Prise en charge des formulaires HTML
+app.use(bodyParser.urlencoded({ extended: false }));
 
-const mongoose = require('mongoose');
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true
+}));
+
+
 mongoose
   .connect(
     "mongodb+srv://Nathanael:Pdxa3P3VTw6dLxCr@cluster0.owdml.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
@@ -23,28 +36,6 @@ mongoose
     console.log("Connection failed!");
   });
 
-for (let index = 0; index < 8; index++) {
-  const article = new Article({
-    title: "Qu\'est-ce que le Lorem Ipsum?",
-    content: "Le Lorem Ipsum est simplement du faux texte",
-    publishedAt: Date.now()
-  })
-
-  // article.save()
-  //   .then(() => console.log("Sauvegarde réussie"))
-  //   .catch(() => console.log("Sauvegarde échoué"));
-}
-
-for (let index = 0; index < 8; index++) {
-  const category = new Category({
-    title: "Qu\'est-ce que le Lorem Ipsum?",
-    description: "Le Lorem Ipsum est simplement du faux texte",
-  })
-
-  // category.save()
-  //   .then(() => console.log("Sauvegarde réussie"))
-  //   .catch(() => console.log("Sauvegarde échoué"));
-}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -55,6 +46,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Init flash
+app.use(flash());
+app.use((req, res, next) => {
+  res.locals.error = req.flash('error');
+  res.locals.success = req.flash('success');
+  res.locals.errorFormArticle = req.flash('errorFormArticle');
+  next();
+})
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

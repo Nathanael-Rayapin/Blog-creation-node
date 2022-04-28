@@ -1,7 +1,33 @@
 {% extends "layout.twig" %}
 
 {% block body %}
-<form action="/add-article" method="POST">
+<h1 class="text-center">Add your article !</h1>
+{% if errorFormArticle %}
+<p class="text-danger">Please fix the following errors</p>
+<ul class="errors">
+    {% for error in errorFormArticle %}
+
+    {# Error Title #}
+    {% if error.title %}
+    <li>{{ error.title.message }}</li>
+    {% endif %}
+    {# Error Category #}
+    {% if error.category %}
+    <li>{{ error.category.message }}</li>
+    {% endif %}
+    {# Error Content #}
+    {% if error.content %}
+    <li>{{ error.content.message }}</li>
+    {% endif %}
+    {# Error Image #}
+    {% if error.image %}
+    <li>{{ error.image.message }}</li>
+    {% endif %}
+
+    {% endfor %}
+</ul>
+{% endif %}
+<form action="/add-article" method="POST" enctype="multipart/form-data">
     <div class="form-group">
         <label for="">Title :</label>
         <input type="text" name="title" class="form-control">
@@ -27,4 +53,15 @@
     </div>
     <button class="btn btn-success mt-3" type="submit">Add Article</button>
 </form>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://cdn.ckeditor.com/ckeditor5/34.0.0/classic/ckeditor.js"></script>
+<script>
+    ClassicEditor
+        .create(document.querySelector('#content'))
+        .catch(error => {
+            console.error(error);
+        });
+</script>
 {% endblock %}
