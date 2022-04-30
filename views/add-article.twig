@@ -2,10 +2,10 @@
 
 {% block body %}
 <h1 class="text-center">Add your article !</h1>
-{% if errorFormArticle %}
+{% if errorForm %}
 <p class="text-danger">Please fix the following errors</p>
 <ul class="errors">
-    {% for error in errorFormArticle %}
+    {% for error in errorForm %}
 
     {# Error Title #}
     {% if error.title %}

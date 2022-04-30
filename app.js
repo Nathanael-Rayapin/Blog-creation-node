@@ -6,11 +6,13 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const bodyParser = require('body-parser');
+const passport = require('passport');
 const mongoose = require('mongoose');
-
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-const req = require('express/lib/request');
+const User = require('./models/user.model');
+const Article = require('./models/article.model');
+const dotenv = require('dotenv').config();
 
 var app = express();
 // Prise en charge du JSON
@@ -19,7 +21,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(session({
-  secret: 'keyboard cat',
+  secret: process.env.SECRET,
   resave: false,
   saveUninitialized: true
 }));
@@ -27,7 +29,7 @@ app.use(session({
 
 mongoose
   .connect(
-    "mongodb+srv://Nathanael:Pdxa3P3VTw6dLxCr@cluster0.owdml.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+    process.env.DATABASE
   )
   .then(() => {
     console.log("Connected to database!");
@@ -49,10 +51,37 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Init flash
 app.use(flash());
+
+// Init Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport Local Mongoose
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 app.use((req, res, next) => {
+  if (req.isAuthenticated()) {
+    Article.find({ author: req.user._id }, (err, articles) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.locals.articles = articles;
+      }
+      next();
+    })
+  } else {
+    next();
+  }
+})
+
+app.use((req, res, next) => {
+  res.locals.user = req.user;
   res.locals.error = req.flash('error');
+  res.locals.warning = req.flash('warning');
   res.locals.success = req.flash('success');
-  res.locals.errorFormArticle = req.flash('errorFormArticle');
+  res.locals.errorForm = req.flash('errorForm');
   next();
 })
 
